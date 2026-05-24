@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2, PowerOff, Power, Loader2 } from "lucide-react";
+import { Plus, Trash2, PowerOff, Power, Loader2, KeyRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,10 +39,17 @@ const createSchema = z.object({
 });
 type CreateForm = z.infer<typeof createSchema>;
 
+const resetPwSchema = z.object({
+  password: z.string().min(8, "Min 8 characters"),
+  confirm:  z.string().min(8, "Min 8 characters"),
+}).refine(d => d.password === d.confirm, { message: "Passwords do not match", path: ["confirm"] });
+type ResetPwForm = z.infer<typeof resetPwSchema>;
+
 function UsersPage() {
   const qc = useQueryClient();
-  const [open, setOpen]           = useState(false);
-  const [deleteUser, setDeleteUser] = useState<AppUser | null>(null);
+  const [open, setOpen]             = useState(false);
+  const [deleteUser, setDeleteUser]   = useState<AppUser | null>(null);
+  const [resetUser, setResetUser]     = useState<AppUser | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -73,8 +80,21 @@ function UsersPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
+  const resetPwMut = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) =>
+      userService.resetPassword(id, password),
+    onSuccess: () => {
+      setResetUser(null);
+      resetPwForm.reset();
+      toast.success("Password reset successfully.");
+    },
+    onError: () => toast.error("Failed to reset password."),
+  });
+
   const { register, handleSubmit, setValue, reset, formState: { errors } } =
     useForm<CreateForm>({ resolver: zodResolver(createSchema), defaultValues: { role: "COUNSELLOR" } });
+
+  const resetPwForm = useForm<ResetPwForm>({ resolver: zodResolver(resetPwSchema) });
 
   const onSubmit = (vals: CreateForm) => createMut.mutate(vals);
 
@@ -82,8 +102,8 @@ function UsersPage() {
     <div className="p-6 space-y-6">
       <PageHeader
         title="Users"
-        description={`${users.length} / 5 users`}
-        action={
+        subtitle={`${users.length} / 5 users`}
+        actions={
           <Button onClick={() => { reset(); setOpen(true); }} disabled={users.length >= 5}>
             <Plus className="mr-2 h-4 w-4" />
             Add User
@@ -127,20 +147,32 @@ function UsersPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => toggleMut.mutate({ id: u.id, active: !u.isActive })}
-                        title={u.isActive ? "Disable" : "Enable"}
+                        onClick={() => { resetPwForm.reset(); setResetUser(u); }}
+                        title="Reset Password"
                       >
-                        {u.isActive
-                          ? <PowerOff className="h-4 w-4 text-muted-foreground" />
-                          : <Power className="h-4 w-4 text-green-600" />}
+                        <KeyRound className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteUser(u)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {u.roles[0] !== "ADMIN" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => toggleMut.mutate({ id: u.id, active: !u.isActive })}
+                          title={u.isActive ? "Disable" : "Enable"}
+                        >
+                          {u.isActive
+                            ? <PowerOff className="h-4 w-4 text-muted-foreground" />
+                            : <Power className="h-4 w-4 text-green-600" />}
+                        </Button>
+                      )}
+                      {u.roles[0] !== "ADMIN" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeleteUser(u)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -218,6 +250,38 @@ function UsersPage() {
         onConfirm={() => { if (deleteUser) { deleteMut.mutate(deleteUser.id); setDeleteUser(null); } }}
         onCancel={() => setDeleteUser(null)}
       />
+
+      {/* Reset password dialog */}
+      <Dialog open={!!resetUser} onOpenChange={(o) => { if (!o) { setResetUser(null); resetPwForm.reset(); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password — {resetUser?.name}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={resetPwForm.handleSubmit((vals) => resetPwMut.mutate({ id: resetUser!.id, password: vals.password }))} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>New Password</Label>
+              <Input type="password" placeholder="Min 8 characters" {...resetPwForm.register("password")} />
+              {resetPwForm.formState.errors.password && (
+                <p className="text-xs text-destructive">{resetPwForm.formState.errors.password.message}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm Password</Label>
+              <Input type="password" placeholder="Repeat password" {...resetPwForm.register("confirm")} />
+              {resetPwForm.formState.errors.confirm && (
+                <p className="text-xs text-destructive">{resetPwForm.formState.errors.confirm.message}</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setResetUser(null); resetPwForm.reset(); }}>Cancel</Button>
+              <Button type="submit" disabled={resetPwMut.isPending}>
+                {resetPwMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Reset Password
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

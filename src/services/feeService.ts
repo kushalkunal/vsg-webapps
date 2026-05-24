@@ -24,4 +24,6 @@ export const feeService = {
     api.post<Fee>(tenantPath("/fees"), p).then((r) => r.data),
   update: (id: string, p: Partial<Fee>) =>
     api.put<Fee>(tenantPath(`/fees/${id}`), p).then((r) => r.data),
+  delete: (id: string) =>
+    api.delete(tenantPath(`/fees/${id}`)).then(() => undefined),
 };

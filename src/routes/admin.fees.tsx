@@ -3,8 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Loader2 } from "lucide-react";
-import { useFees, useCreateFee, useUpdateFee } from "@/hooks/useFees";
+import { Plus, Pencil, Loader2, Trash2, Search } from "lucide-react";
+import { useFees, useCreateFee, useUpdateFee, useDeleteFee } from "@/hooks/useFees";
 import { useCollegeAdmin } from "@/hooks/useCollegeAdmin";
 import { useCourseAdmin } from "@/hooks/useCourseAdmin";
 import { useSettings } from "@/hooks/useSettings";
@@ -20,12 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
+import { Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import type { Fee } from "@/services/feeService";
 
 export const Route = createFileRoute("/admin/fees")({
@@ -72,9 +72,12 @@ function FeesPage() {
 
   const createMutation = useCreateFee();
   const updateMutation = useUpdateFee();
+  const deleteMutation = useDeleteFee();
 
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen]   = useState(false);
   const [editingFee, setEditingFee] = useState<Fee | null>(null);
+  const [deleteFee, setDeleteFee]   = useState<Fee | null>(null);
+  const [search, setSearch]         = useState("");
 
   const {
     register,
@@ -152,6 +155,16 @@ function FeesPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const filtered = fees.filter((f) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      collegeName(f.collegeId).toLowerCase().includes(q) ||
+      courseName(f.courseId).toLowerCase().includes(q) ||
+      (f.branch ?? "").toLowerCase().includes(q)
+    );
+  });
+
   const columns: Column<Fee>[] = [
     { key: "college", header: "College", render: (f) => collegeName(f.collegeId) },
     { key: "course", header: "Course", render: (f) => courseName(f.courseId) },
@@ -164,11 +177,16 @@ function FeesPage() {
     {
       key: "actions",
       header: "",
-      className: "w-16",
+      className: "w-24",
       render: (f) => (
-        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(f)}>
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center justify-end gap-1">
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(f)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setDeleteFee(f)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -177,7 +195,7 @@ function FeesPage() {
     <div className="space-y-5 p-4 lg:p-6">
       <PageHeader
         title="Fee Structures"
-        subtitle={`${fees.length} entries`}
+        subtitle={`${filtered.length} of ${fees.length} entries`}
         actions={
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" /> Add Fee
@@ -185,12 +203,22 @@ function FeesPage() {
         }
       />
 
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          placeholder="Search college, course or branch…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       <DataTable
         columns={columns}
-        data={fees}
+        data={filtered}
         isLoading={isLoading}
         rowKey={(f) => f.id}
-        emptyMessage="No fee structures yet. Add the first one."
+        emptyMessage={search ? "No results match your search." : "No fee structures yet. Add the first one."}
       />
 
       {/* Sheet form */}
@@ -325,6 +353,16 @@ function FeesPage() {
           </form>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteFee}
+        title="Delete Fee Structure"
+        description={`Delete fee entry for "${collegeName(deleteFee?.collegeId)}" / "${courseName(deleteFee?.courseId)}"${deleteFee?.branch ? ` (${deleteFee.branch})` : ""}? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => { if (deleteFee) { deleteMutation.mutate(deleteFee.id); setDeleteFee(null); } }}
+        onCancel={() => setDeleteFee(null)}
+      />
     </div>
   );
 }

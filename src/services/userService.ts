@@ -39,4 +39,8 @@ export const userService = {
   async disable(id: string): Promise<void> {
     await api.patch(`/admin/users/${id}/disable`);
   },
+
+  async resetPassword(id: string, password: string): Promise<void> {
+    await api.patch(`/admin/users/${id}/reset-password`, { password });
+  },
 };

@@ -42,3 +42,14 @@ export function useUpdateFee() {
     },
   });
 }
+
+export function useDeleteFee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => feeService.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [FEES_KEY] });
+      toast.success("Fee structure deleted");
+    },
+  });
+}
