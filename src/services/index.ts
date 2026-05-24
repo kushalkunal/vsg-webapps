@@ -1,5 +1,6 @@
 export { default as api, tenantPath } from "./api";
 export * from "./authService";
+export * from "./userService";
 export * from "./studentService";
 export * from "./collegeService";
 export * from "./courseService";

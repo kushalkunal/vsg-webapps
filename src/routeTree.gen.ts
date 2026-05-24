@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CollegesRouteImport } from './routes/colleges'
@@ -18,6 +20,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesSlugRouteImport } from './routes/courses.$slug'
 import { Route as CollegesIdRouteImport } from './routes/colleges_.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminFollowupsRouteImport } from './routes/admin.followups'
@@ -30,9 +33,19 @@ import { Route as AdminStudentsIdRouteImport } from './routes/admin.students_.$i
 import { Route as AdminCollegesNewRouteImport } from './routes/admin.colleges_.new'
 import { Route as AdminCollegesIdRouteImport } from './routes/admin.colleges_.$id'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesRoute = CoursesRouteImport.update({
@@ -74,6 +87,11 @@ const CollegesIdRoute = CollegesIdRouteImport.update({
   id: '/colleges_/$id',
   path: '/colleges/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminStudentsRoute = AdminStudentsRouteImport.update({
   id: '/students',
@@ -138,7 +156,9 @@ export interface FileRoutesByFullPath {
   '/colleges': typeof CollegesRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/colleges': typeof AdminCollegesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -146,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/admin/followups': typeof AdminFollowupsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/colleges/$id': typeof CollegesIdRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin/colleges/$id': typeof AdminCollegesIdRoute
@@ -160,7 +181,9 @@ export interface FileRoutesByTo {
   '/colleges': typeof CollegesRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/colleges': typeof AdminCollegesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -168,6 +191,7 @@ export interface FileRoutesByTo {
   '/admin/followups': typeof AdminFollowupsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/colleges/$id': typeof CollegesIdRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin/colleges/$id': typeof AdminCollegesIdRoute
@@ -183,7 +207,9 @@ export interface FileRoutesById {
   '/colleges': typeof CollegesRoute
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/colleges': typeof AdminCollegesRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -191,6 +217,7 @@ export interface FileRoutesById {
   '/admin/followups': typeof AdminFollowupsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/colleges_/$id': typeof CollegesIdRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/admin/colleges_/$id': typeof AdminCollegesIdRoute
@@ -207,7 +234,9 @@ export interface FileRouteTypes {
     | '/colleges'
     | '/contact'
     | '/courses'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/admin/colleges'
     | '/admin/courses'
     | '/admin/dashboard'
@@ -215,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/followups'
     | '/admin/settings'
     | '/admin/students'
+    | '/admin/users'
     | '/colleges/$id'
     | '/courses/$slug'
     | '/admin/colleges/$id'
@@ -229,7 +259,9 @@ export interface FileRouteTypes {
     | '/colleges'
     | '/contact'
     | '/courses'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/admin/colleges'
     | '/admin/courses'
     | '/admin/dashboard'
@@ -237,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin/followups'
     | '/admin/settings'
     | '/admin/students'
+    | '/admin/users'
     | '/colleges/$id'
     | '/courses/$slug'
     | '/admin/colleges/$id'
@@ -251,7 +284,9 @@ export interface FileRouteTypes {
     | '/colleges'
     | '/contact'
     | '/courses'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/admin/colleges'
     | '/admin/courses'
     | '/admin/dashboard'
@@ -259,6 +294,7 @@ export interface FileRouteTypes {
     | '/admin/followups'
     | '/admin/settings'
     | '/admin/students'
+    | '/admin/users'
     | '/colleges_/$id'
     | '/courses/$slug'
     | '/admin/colleges_/$id'
@@ -274,17 +310,33 @@ export interface RootRouteChildren {
   CollegesRoute: typeof CollegesRoute
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   CollegesIdRoute: typeof CollegesIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses': {
@@ -342,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/colleges/$id'
       preLoaderRoute: typeof CollegesIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/students': {
       id: '/admin/students'
@@ -431,6 +490,7 @@ interface AdminRouteChildren {
   AdminFollowupsRoute: typeof AdminFollowupsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminCollegesIdRoute: typeof AdminCollegesIdRoute
   AdminCollegesNewRoute: typeof AdminCollegesNewRoute
   AdminStudentsIdRoute: typeof AdminStudentsIdRoute
@@ -445,6 +505,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFollowupsRoute: AdminFollowupsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStudentsRoute: AdminStudentsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminCollegesIdRoute: AdminCollegesIdRoute,
   AdminCollegesNewRoute: AdminCollegesNewRoute,
   AdminStudentsIdRoute: AdminStudentsIdRoute,
@@ -471,7 +532,9 @@ const rootRouteChildren: RootRouteChildren = {
   CollegesRoute: CollegesRoute,
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   CollegesIdRoute: CollegesIdRoute,
 }
 export const routeTree = rootRouteImport

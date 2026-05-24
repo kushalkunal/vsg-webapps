@@ -23,12 +23,16 @@ import logo from "@/assets/logo-vsg.png";
 
 const NAV = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/admin/students", icon: Users, label: "Students" },
-  { to: "/admin/colleges", icon: Building2, label: "Colleges" },
-  { to: "/admin/courses", icon: BookOpen, label: "Courses" },
-  { to: "/admin/fees", icon: DollarSign, label: "Fees" },
-  { to: "/admin/followups", icon: MessageSquare, label: "Follow-ups" },
-  { to: "/admin/settings", icon: Settings, label: "Settings" },
+  { to: "/admin/students",  icon: Users,          label: "Students" },
+  { to: "/admin/colleges",  icon: Building2,       label: "Colleges" },
+  { to: "/admin/courses",   icon: BookOpen,        label: "Courses" },
+  { to: "/admin/fees",      icon: DollarSign,      label: "Fees" },
+  { to: "/admin/followups", icon: MessageSquare,   label: "Follow-ups" },
+  { to: "/admin/settings",  icon: Settings,        label: "Settings" },
+];
+
+const ADMIN_ONLY_NAV = [
+  { to: "/admin/users", icon: Users, label: "User Management" },
 ];
 
 export function AdminLayout() {
@@ -127,6 +131,33 @@ export function AdminLayout() {
               </Link>
             );
           })}
+
+          {/* Admin-only section */}
+          {user?.roles?.includes("ADMIN") && (
+            <>
+              <div className="my-2 border-t border-border" />
+              {ADMIN_ONLY_NAV.map((item) => {
+                const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "text-foreground/70 hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                    {active && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-70" />}
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Footer */}
