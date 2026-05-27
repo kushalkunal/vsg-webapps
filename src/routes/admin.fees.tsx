@@ -184,6 +184,7 @@ function FeesPage() {
     { key: "branch", header: "Branch", render: (f) => f.branch || "—" },
     { key: "registrationFee", header: "Registration", render: (f) => fmt(f.registrationFee, f.currency) },
     { key: "tuitionFee", header: "Tuition (Yearly)", render: (f) => fmt(f.tuitionFee, f.currency) },
+    { key: "examinationFee", header: "Exam Fee", render: (f) => fmt(f.examinationFee, f.currency) },
     { key: "hostelFee", header: "Hostel", render: (f) => fmt(f.hostelFee, f.currency) },
     { key: "totalPkgWithoutHostel", header: "Pkg w/o Hostel",
       render: (f) => fmt(f.totalPkgWithoutHostel, f.currency) },
