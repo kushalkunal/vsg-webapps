@@ -12,6 +12,9 @@ export interface College {
   nmcApproved?: boolean;
   whoApproved?: boolean;
   hostelAvailable?: boolean;
+  ugcApproved?: boolean;
+  aicteApproved?: boolean;
+  naacAccredited?: boolean;
   brochureUrl?: string;
   imageUrl?: string;
 }
@@ -33,10 +36,12 @@ export interface FeeSummary {
   id: string;
   courseName?: string;
   branch?: string;
+  registrationFee: number;
   tuitionFee: number;
+  examinationFee: number;
   hostelFee: number;
-  visaFee: number;
-  insuranceFee: number;
+  totalPkgWithoutHostel: number;
+  totalPkgWithHostel: number;
   miscellaneousFee: number;
   totalFee: number;
   currency?: string;

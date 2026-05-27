@@ -7,10 +7,12 @@ export interface Fee {
   branch?: string;
   collegeName?: string;
   courseName?: string;
+  registrationFee: number;
   tuitionFee: number;
+  examinationFee: number;
   hostelFee: number;
-  visaFee: number;
-  insuranceFee: number;
+  totalPkgWithoutHostel: number;
+  totalPkgWithHostel: number;
   miscellaneousFee: number;
   totalFee: number;
   currency?: string;

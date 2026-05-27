@@ -4,7 +4,7 @@ export interface Course {
   id: string;
   name: string;
   description?: string;
-  durationMonths?: number;
+  durationYears?: number;
 }
 
 export const courseService = {

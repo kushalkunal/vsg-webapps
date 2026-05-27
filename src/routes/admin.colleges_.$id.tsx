@@ -31,6 +31,9 @@ const collegeSchema = z.object({
   nmcApproved: z.boolean().optional(),
   whoApproved: z.boolean().optional(),
   hostelAvailable: z.boolean().optional(),
+  ugcApproved: z.boolean().optional(),
+  aicteApproved: z.boolean().optional(),
+  naacAccredited: z.boolean().optional(),
   brochureUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   imageUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
@@ -51,7 +54,7 @@ function EditCollegePage() {
     control,
     reset,
     formState: { errors, isDirty },
-  } = useForm<CollegeFormValues>({ resolver: zodResolver(collegeSchema) });
+  } = useForm({ resolver: zodResolver(collegeSchema) });
 
   useEffect(() => {
     if (college) {
@@ -64,13 +67,16 @@ function EditCollegePage() {
         nmcApproved: college.nmcApproved ?? false,
         whoApproved: college.whoApproved ?? false,
         hostelAvailable: college.hostelAvailable ?? false,
+        ugcApproved: college.ugcApproved ?? false,
+        aicteApproved: college.aicteApproved ?? false,
+        naacAccredited: college.naacAccredited ?? false,
         brochureUrl: college.brochureUrl ?? "",
         imageUrl: college.imageUrl ?? "",
       });
     }
   }, [college, reset]);
 
-  const onSubmit = (values: CollegeFormValues) => {
+  const onSubmit = (values: any) => {
     updateMutation.mutate({ id, data: values });
   };
 
@@ -184,6 +190,9 @@ function EditCollegePage() {
               { name: "nmcApproved" as const, label: "NMC Approved" },
               { name: "whoApproved" as const, label: "WHO Approved" },
               { name: "hostelAvailable" as const, label: "Hostel Available" },
+              { name: "ugcApproved" as const, label: "UGC Approved" },
+              { name: "aicteApproved" as const, label: "AICTE Approved" },
+              { name: "naacAccredited" as const, label: "NAAC Accredited" },
             ]
           ).map(({ name, label }) => (
             <Controller

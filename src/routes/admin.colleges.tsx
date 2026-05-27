@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ExternalLink } from "lucide-react";
 import {
   useCollegeAdmin,
   useDeleteCollege,
@@ -80,13 +80,28 @@ function CollegesPage() {
       render: (c) => (
         <div className="flex flex-wrap gap-1">
           {c.nmcApproved && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-[10px] bg-green-600 text-white hover:bg-green-600">
               NMC
             </Badge>
           )}
           {c.whoApproved && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-[10px] bg-green-600 text-white hover:bg-green-600">
               WHO
+            </Badge>
+          )}
+          {c.ugcApproved && (
+            <Badge variant="secondary" className="text-[10px] bg-blue-600 text-white hover:bg-blue-600">
+              UGC
+            </Badge>
+          )}
+          {c.aicteApproved && (
+            <Badge variant="secondary" className="text-[10px] bg-blue-600 text-white hover:bg-blue-600">
+              AICTE
+            </Badge>
+          )}
+          {c.naacAccredited && (
+            <Badge variant="secondary" className="text-[10px] bg-purple-600 text-white hover:bg-purple-600">
+              NAAC
             </Badge>
           )}
           {c.hostelAvailable && (
@@ -96,6 +111,24 @@ function CollegesPage() {
           )}
         </div>
       ),
+    },
+    {
+      key: "brochure",
+      header: "Brochure",
+      render: (c) =>
+        c.brochureUrl ? (
+          <a
+            href={c.brochureUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View
+          </a>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
     },
     {
       key: "actions",

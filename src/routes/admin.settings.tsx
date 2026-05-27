@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus, Trash2 } from "lucide-react";
-import { useEffect } from "react";
+import { Loader2, Plus, Trash2, Download, Upload, AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { backupService, type RestoreResult } from "@/services/backupService";
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
@@ -223,7 +225,129 @@ function SettingsPage() {
           </Button>
         </div>
       </form>
+
+      <Separator />
+
+      {/* Backup & Restore */}
+      <BackupSection />
     </div>
+  );
+}
+
+function BackupSection() {
+  const [downloading, setDownloading] = useState(false);
+  const [restoring, setRestoring]     = useState(false);
+  const [result, setResult]           = useState<RestoreResult | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const blob = await backupService.download();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `backup-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Backup downloaded");
+    } catch {
+      toast.error("Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRestoring(true);
+    setResult(null);
+    try {
+      const res = await backupService.restore(file);
+      setResult(res);
+      if (res.errors.length === 0) {
+        toast.success(
+          `Restored: ${res.students} students, ${res.colleges} colleges, ${res.courses} courses, ${res.fees} fees`
+        );
+      } else {
+        toast.warning(`Restored with ${res.errors.length} error(s) — see details below`);
+      }
+    } catch {
+      toast.error("Restore failed");
+    } finally {
+      setRestoring(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+      <h2 className="mb-1 font-display font-semibold text-foreground">
+        Backup &amp; Restore
+      </h2>
+      <p className="mb-5 text-xs text-muted-foreground">
+        Download all your data as an Excel file. If the database is ever lost or
+        corrupted, upload that file to recover everything.
+      </p>
+
+      <div className="flex flex-wrap gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={downloading}
+          onClick={handleDownload}
+        >
+          {downloading
+            ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            : <Download className="mr-2 h-4 w-4" />}
+          Download Backup (.xlsx)
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={restoring}
+          onClick={() => fileRef.current?.click()}
+        >
+          {restoring
+            ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            : <Upload className="mr-2 h-4 w-4" />}
+          Restore from Excel
+        </Button>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx"
+          className="hidden"
+          onChange={handleRestore}
+        />
+      </div>
+
+      {result && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4 text-sm space-y-2">
+          <p className="font-medium text-foreground">Restore summary</p>
+          <ul className="text-muted-foreground space-y-0.5">
+            <li>Students restored: <span className="font-semibold text-foreground">{result.students}</span></li>
+            <li>Colleges restored: <span className="font-semibold text-foreground">{result.colleges}</span></li>
+            <li>Courses restored:  <span className="font-semibold text-foreground">{result.courses}</span></li>
+            <li>Fees restored:     <span className="font-semibold text-foreground">{result.fees}</span></li>
+          </ul>
+          {result.errors.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <p className="flex items-center gap-1.5 font-medium text-destructive">
+                <AlertCircle className="h-3.5 w-3.5" />
+                {result.errors.length} row(s) skipped
+              </p>
+              <ul className="max-h-40 overflow-y-auto space-y-0.5 text-xs text-destructive/80">
+                {result.errors.map((e, i) => <li key={i}>{e}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

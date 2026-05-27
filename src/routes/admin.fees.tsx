@@ -37,28 +37,34 @@ const feeSchema = z.object({
   courseId: z.string().optional(),
   branch: z.string().optional(),
   currency: z.string().optional(),
+  // yearly fields
+  registrationFee: z.coerce.number().min(0),
   tuitionFee: z.coerce.number().min(0),
+  examinationFee: z.coerce.number().min(0),
   hostelFee: z.coerce.number().min(0),
-  visaFee: z.coerce.number().min(0),
-  insuranceFee: z.coerce.number().min(0),
   miscellaneousFee: z.coerce.number().min(0),
+  // whole-course package fields (manually entered)
+  totalPkgWithoutHostel: z.coerce.number().min(0),
+  totalPkgWithHostel: z.coerce.number().min(0),
 });
 type FeeFormValues = z.infer<typeof feeSchema>;
 
-function calcTotal(v: Partial<FeeFormValues>) {
-  return (
-    (v.tuitionFee ?? 0) +
-    (v.hostelFee ?? 0) +
-    (v.visaFee ?? 0) +
-    (v.insuranceFee ?? 0) +
-    (v.miscellaneousFee ?? 0)
-  );
+// Calculated from yearly fee inputs (NOT the manual package fields)
+function calcFeeWithoutHostel(v: Partial<FeeFormValues>) {
+  return (Number(v.registrationFee) || 0)
+       + (Number(v.tuitionFee) || 0)
+       + (Number(v.examinationFee) || 0)
+       + (Number(v.miscellaneousFee) || 0);
+}
+function calcFeeWithHostel(v: Partial<FeeFormValues>) {
+  return calcFeeWithoutHostel(v) + (Number(v.hostelFee) || 0);
 }
 
 function fmt(n: number, currency = "INR") {
+  const code = ["INR", "USD"].includes(currency) ? currency : "INR";
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency,
+    currency: code,
     maximumFractionDigits: 0,
   }).format(n);
 }
@@ -89,26 +95,31 @@ function FeesPage() {
   } = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
+      registrationFee: 0,
       tuitionFee: 0,
+      examinationFee: 0,
       hostelFee: 0,
-      visaFee: 0,
-      insuranceFee: 0,
       miscellaneousFee: 0,
+      totalPkgWithoutHostel: 0,
+      totalPkgWithHostel: 0,
       currency,
     },
   });
 
   const watched = watch();
-  const total = calcTotal(watched);
+  const calcedWithout = calcFeeWithoutHostel(watched);
+  const calcedWith    = calcFeeWithHostel(watched);
 
   const openCreate = () => {
     setEditingFee(null);
     reset({
+      registrationFee: 0,
       tuitionFee: 0,
+      examinationFee: 0,
       hostelFee: 0,
-      visaFee: 0,
-      insuranceFee: 0,
       miscellaneousFee: 0,
+      totalPkgWithoutHostel: 0,
+      totalPkgWithHostel: 0,
       currency,
     });
     setSheetOpen(true);
@@ -121,11 +132,13 @@ function FeesPage() {
       courseId: fee.courseId ?? "",
       branch: fee.branch ?? "",
       currency: fee.currency ?? currency,
+      registrationFee: fee.registrationFee,
       tuitionFee: fee.tuitionFee,
+      examinationFee: fee.examinationFee,
       hostelFee: fee.hostelFee,
-      visaFee: fee.visaFee,
-      insuranceFee: fee.insuranceFee,
       miscellaneousFee: fee.miscellaneousFee,
+      totalPkgWithoutHostel: fee.totalPkgWithoutHostel,
+      totalPkgWithHostel: fee.totalPkgWithHostel,
     });
     setSheetOpen(true);
   };
@@ -133,7 +146,7 @@ function FeesPage() {
   const onSubmit = (values: FeeFormValues) => {
     const payload = {
       ...values,
-      totalFee: calcTotal(values),
+      totalFee: values.totalPkgWithHostel,
       collegeId: values.collegeId || undefined,
       courseId: values.courseId || undefined,
       branch: values.branch || undefined,
@@ -169,11 +182,23 @@ function FeesPage() {
     { key: "college", header: "College", render: (f) => collegeName(f.collegeId) },
     { key: "course", header: "Course", render: (f) => courseName(f.courseId) },
     { key: "branch", header: "Branch", render: (f) => f.branch || "—" },
-    { key: "tuitionFee", header: "Tuition", render: (f) => fmt(f.tuitionFee, f.currency) },
+    { key: "registrationFee", header: "Registration", render: (f) => fmt(f.registrationFee, f.currency) },
+    { key: "tuitionFee", header: "Tuition (Yearly)", render: (f) => fmt(f.tuitionFee, f.currency) },
     { key: "hostelFee", header: "Hostel", render: (f) => fmt(f.hostelFee, f.currency) },
-    { key: "totalFee", header: "Total", render: (f) => (
-      <span className="font-semibold text-primary">{fmt(f.totalFee, f.currency)}</span>
-    )},
+    { key: "totalPkgWithoutHostel", header: "Pkg w/o Hostel",
+      render: (f) => fmt(f.totalPkgWithoutHostel, f.currency) },
+    { key: "totalPkgWithHostel",    header: "Pkg w/ Hostel",
+      render: (f) => fmt(f.totalPkgWithHostel, f.currency) },
+    { key: "calcWithout", header: "Total w/o Hostel",
+      render: (f) => {
+        const v = (f.registrationFee||0)+(f.tuitionFee||0)+(f.examinationFee||0)+(f.miscellaneousFee||0);
+        return <span>{fmt(v, f.currency)}</span>;
+      }},
+    { key: "calcWith", header: "Total w/ Hostel",
+      render: (f) => {
+        const v = (f.registrationFee||0)+(f.tuitionFee||0)+(f.examinationFee||0)+(f.hostelFee||0)+(f.miscellaneousFee||0);
+        return <span className="font-semibold text-primary">{fmt(v, f.currency)}</span>;
+      }},
     {
       key: "actions",
       header: "",
@@ -290,8 +315,22 @@ function FeesPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="feeCurrency">Currency</Label>
-              <Input id="feeCurrency" placeholder="INR" {...register("currency")} />
+              <Label>Currency</Label>
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <Select value={field.value || "INR"} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INR">INR — Indian Rupee (₹)</SelectItem>
+                      <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {/* Fee breakdown */}
@@ -299,17 +338,21 @@ function FeesPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Fee Breakdown
               </p>
+              {/* ── Yearly fees ── */}
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Per Year
+              </p>
               {(
                 [
-                  { id: "tuitionFee", label: "Tuition Fee" },
-                  { id: "hostelFee", label: "Hostel Fee" },
-                  { id: "visaFee", label: "Visa Fee" },
-                  { id: "insuranceFee", label: "Insurance Fee" },
+                  { id: "registrationFee",  label: "Registration Fee" },
+                  { id: "tuitionFee",       label: "Tuition Fee" },
+                  { id: "examinationFee",   label: "Examination Fee" },
+                  { id: "hostelFee",        label: "Hostel Fee" },
                   { id: "miscellaneousFee", label: "Miscellaneous" },
                 ] as const
               ).map(({ id, label }) => (
                 <div key={id} className="flex items-center gap-3">
-                  <Label htmlFor={id} className="w-32 shrink-0 text-sm">
+                  <Label htmlFor={id} className="w-40 shrink-0 text-sm">
                     {label}
                   </Label>
                   <Input
@@ -320,20 +363,57 @@ function FeesPage() {
                     className="flex-1"
                   />
                   {errors[id] && (
-                    <p className="text-xs text-destructive">
-                      {errors[id]?.message}
-                    </p>
+                    <p className="text-xs text-destructive">{errors[id]?.message}</p>
                   )}
                 </div>
               ))}
 
-              <div className="flex items-center justify-between border-t border-border pt-3">
-                <span className="text-sm font-semibold text-foreground">
-                  Total
-                </span>
-                <span className="font-display text-lg font-bold text-primary">
-                  {fmt(total, watched.currency || currency)}
-                </span>
+              {/* ── Whole course packages ── */}
+              <div className="border-t border-border pt-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Whole Course Package
+                </p>
+                {(
+                  [
+                    { id: "totalPkgWithoutHostel", label: "Pkg Without Hostel" },
+                    { id: "totalPkgWithHostel",    label: "Pkg With Hostel" },
+                  ] as const
+                ).map(({ id, label }) => (
+                  <div key={id} className="mb-2 flex items-center gap-3">
+                    <Label htmlFor={id} className="w-40 shrink-0 text-sm">
+                      {label}
+                    </Label>
+                    <Input
+                      id={id}
+                      type="number"
+                      min="0"
+                      {...register(id)}
+                      className="flex-1"
+                    />
+                    {errors[id] && (
+                      <p className="text-xs text-destructive">{errors[id]?.message}</p>
+                    )}
+                  </div>
+                ))}
+
+                {/* ── Calculated totals (auto-summed from Per Year inputs above) ── */}
+                <div className="border-t border-border pt-3 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Calculated Totals
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Fee Without Hostel</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {fmt(calcedWithout, watched.currency || currency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">Total Fee With Hostel</span>
+                    <span className="font-display text-lg font-bold text-primary">
+                      {fmt(calcedWith, watched.currency || currency)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

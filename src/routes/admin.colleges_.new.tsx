@@ -24,6 +24,9 @@ const collegeSchema = z.object({
   nmcApproved: z.boolean().optional(),
   whoApproved: z.boolean().optional(),
   hostelAvailable: z.boolean().optional(),
+  ugcApproved: z.boolean().optional(),
+  aicteApproved: z.boolean().optional(),
+  naacAccredited: z.boolean().optional(),
   brochureUrl: z
     .string()
     .url("Invalid URL")
@@ -46,16 +49,19 @@ function NewCollegePage() {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<CollegeFormValues>({
+  } = useForm({
     resolver: zodResolver(collegeSchema),
     defaultValues: {
       nmcApproved: false,
       whoApproved: false,
       hostelAvailable: false,
+      ugcApproved: false,
+      aicteApproved: false,
+      naacAccredited: false,
     },
   });
 
-  const onSubmit = (values: CollegeFormValues) => {
+  const onSubmit = (values: any) => {
     createMutation.mutate(
       {
         name: values.name,
@@ -66,6 +72,9 @@ function NewCollegePage() {
         nmcApproved: values.nmcApproved,
         whoApproved: values.whoApproved,
         hostelAvailable: values.hostelAvailable,
+        ugcApproved: values.ugcApproved,
+        aicteApproved: values.aicteApproved,
+        naacAccredited: values.naacAccredited,
         brochureUrl: values.brochureUrl || undefined,
         imageUrl: values.imageUrl || undefined,
       },
@@ -180,6 +189,9 @@ export function CollegeFormFields({
             { name: "nmcApproved", label: "NMC Approved" },
             { name: "whoApproved", label: "WHO Approved" },
             { name: "hostelAvailable", label: "Hostel Available" },
+            { name: "ugcApproved", label: "UGC Approved" },
+            { name: "aicteApproved", label: "AICTE Approved" },
+            { name: "naacAccredited", label: "NAAC Accredited" },
           ] as const
         ).map(({ name, label }) => (
           <Controller

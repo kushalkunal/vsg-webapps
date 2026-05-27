@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/courses")({
 const courseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  durationMonths: z.coerce.number().min(1).optional(),
+  durationYears: z.coerce.number().min(1).optional(),
 });
 type CourseFormValues = z.infer<typeof courseSchema>;
 
@@ -50,7 +50,7 @@ function CoursesPage() {
 
   const openCreate = () => {
     setEditingCourse(null);
-    reset({ name: "", description: "", durationMonths: undefined });
+    reset({ name: "", description: "", durationYears: undefined });
     setShowForm(true);
   };
 
@@ -59,7 +59,7 @@ function CoursesPage() {
     reset({
       name: c.name,
       description: c.description ?? "",
-      durationMonths: c.durationMonths,
+      durationYears: c.durationYears,
     });
     setShowForm(true);
   };
@@ -107,12 +107,12 @@ function CoursesPage() {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="durationMonths">Duration (months)</Label>
+              <Label htmlFor="durationYears">Duration (years)</Label>
               <Input
-                id="durationMonths"
+                id="durationYears"
                 type="number"
-                placeholder="e.g. 48"
-                {...register("durationMonths")}
+                placeholder="e.g. 4"
+                {...register("durationYears")}
               />
             </div>
           </div>
@@ -155,8 +155,8 @@ function CoursesPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground">{c.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {c.durationMonths
-                      ? `${c.durationMonths} months`
+                    {c.durationYears
+                      ? `${c.durationYears} years`
                       : "Duration not set"}
                     {c.description && ` · ${c.description}`}
                   </p>

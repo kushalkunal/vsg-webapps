@@ -57,10 +57,12 @@ function FeeBreakdownTable({ fees }: { fees: FeeSummary[] }) {
       <TableHeader>
         <TableRow>
           <TableHead>Branch</TableHead>
-          <TableHead className="text-right">Tuition</TableHead>
+          <TableHead className="text-right">Registration</TableHead>
+          <TableHead className="text-right">Tuition (Yearly)</TableHead>
+          <TableHead className="text-right">Examination</TableHead>
           <TableHead className="text-right">Hostel</TableHead>
-          <TableHead className="text-right">Visa</TableHead>
-          <TableHead className="text-right">Insurance</TableHead>
+          <TableHead className="text-right">Pkg w/o Hostel</TableHead>
+          <TableHead className="text-right">Pkg w/ Hostel</TableHead>
           <TableHead className="text-right">Misc</TableHead>
           <TableHead className="text-right font-bold">Total</TableHead>
         </TableRow>
@@ -76,10 +78,12 @@ function FeeBreakdownTable({ fees }: { fees: FeeSummary[] }) {
                 )}
               </div>
             </TableCell>
+            <TableCell className="text-right">{fmt(f.registrationFee, f.currency)}</TableCell>
             <TableCell className="text-right">{fmt(f.tuitionFee, f.currency)}</TableCell>
+            <TableCell className="text-right">{fmt(f.examinationFee, f.currency)}</TableCell>
             <TableCell className="text-right">{fmt(f.hostelFee, f.currency)}</TableCell>
-            <TableCell className="text-right">{fmt(f.visaFee, f.currency)}</TableCell>
-            <TableCell className="text-right">{fmt(f.insuranceFee, f.currency)}</TableCell>
+            <TableCell className="text-right">{fmt(f.totalPkgWithoutHostel, f.currency)}</TableCell>
+            <TableCell className="text-right">{fmt(f.totalPkgWithHostel, f.currency)}</TableCell>
             <TableCell className="text-right">{fmt(f.miscellaneousFee, f.currency)}</TableCell>
             <TableCell className="text-right font-bold text-primary">
               {fmt(f.totalFee, f.currency)}

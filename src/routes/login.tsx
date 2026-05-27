@@ -113,7 +113,7 @@ function LoginPage() {
                   <Input
                     id="password"
                     type={showPwd ? "text" : "password"}
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                     autoComplete="current-password"
                     className="pr-10"
                     {...credForm.register("password")}
@@ -184,7 +184,7 @@ function LoginPage() {
         </div>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          <a href="/" className="hover:text-foreground transition-colors">â† Back to website</a>
+          <a href="/" className="hover:text-foreground transition-colors">← Back to website</a>
         </p>
       </div>
     </div>
