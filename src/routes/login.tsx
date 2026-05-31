@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/authService";
 import { getAuthToken } from "@/stores/authStore";
 import logo from "@/assets/logo-vsg.png";
+import logoScaliolab from "@/assets/logo-scaliolab.png";
 
 const credSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -186,6 +187,20 @@ function LoginPage() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <a href="/" className="hover:text-foreground transition-colors">← Back to website</a>
         </p>
+
+        {/* Designed & Managed by */}
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <span className="text-xs text-muted-foreground/60">Designed &amp; Managed by</span>
+          <a
+            href="https://scaliolab.com"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground shadow-sm transition-colors hover:border-primary/50 hover:opacity-80"
+          >
+            <img src={logoScaliolab} alt="Scalio Lab" className="h-4 w-4 rounded-sm object-contain" />
+            Scalio Lab
+          </a>
+        </div>
       </div>
     </div>
   );

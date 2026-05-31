@@ -20,6 +20,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useState, useEffect } from "react";
 import { settingsService } from "@/services/settingsService";
 import logo from "@/assets/logo-vsg.png";
+import logoScaliolab from "@/assets/logo-scaliolab.png";
 
 const NAV = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -178,6 +179,19 @@ export function AdminLayout() {
             <LogOut className="h-4 w-4 shrink-0" />
             Sign Out
           </button>
+
+          {/* Designed & Managed by Scalio Lab */}
+          <div className="mt-3 border-t border-border pt-3">
+            <a
+              href="https://scaliolab.com"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[10px] text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+            >
+              <img src={logoScaliolab} alt="Scalio Lab" className="h-4 w-4 rounded-sm object-contain" />
+              <span>Designed &amp; Managed by <strong className="text-muted-foreground">Scalio Lab</strong></span>
+            </a>
+          </div>
         </div>
       </aside>
 

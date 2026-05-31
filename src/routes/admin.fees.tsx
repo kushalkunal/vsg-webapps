@@ -442,7 +442,7 @@ function FeesPage() {
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={() => { if (deleteFee) { deleteMutation.mutate(deleteFee.id); setDeleteFee(null); } }}
-        onCancel={() => setDeleteFee(null)}
+        onOpenChange={(o) => { if (!o) setDeleteFee(null); }}
       />
     </div>
   );

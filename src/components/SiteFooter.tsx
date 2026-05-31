@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Linkedin, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import logo from "@/assets/logo-vsg.png";
+import logoScaliolab from "@/assets/logo-scaliolab.png";
 import { ADDRESSES, EMAIL, PHONE_NUMBERS, PHONE_TEL, WEBSITE } from "@/lib/contact";
 
 export function SiteFooter() {
@@ -77,12 +78,15 @@ export function SiteFooter() {
         <div className="mt-12 pt-6 border-t border-background/10 flex flex-col md:flex-row gap-3 justify-between items-center text-xs opacity-70">
           <p>© {new Date().getFullYear()} Visionary Salva Group · {WEBSITE} · All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <p>
-              Designed &amp; Managed by{" "}
-              <a href="https://thekk.in" target="_blank" rel="noreferrer" className="font-semibold text-secondary hover:underline">
-                Team KK — thekk.in
-              </a>
-            </p>
+            <a
+              href="https://scaliolab.com"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+            >
+              <img src={logoScaliolab} alt="Scalio Lab" className="h-5 w-5 rounded-sm object-contain" />
+              <span>Designed &amp; Managed by <strong>Scalio Lab</strong></span>
+            </a>
           </div>
         </div>
       </div>

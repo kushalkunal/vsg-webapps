@@ -6,6 +6,7 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import logoVsg from "@/assets/logo-vsg.png";
+import logoScaliolab from "@/assets/logo-scaliolab.png";
 
 const queryClient = new QueryClient({
   defaultOptions: {

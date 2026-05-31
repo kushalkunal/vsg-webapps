@@ -359,7 +359,7 @@ function UsersPage() {
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={() => { if (deleteUser) { deleteMut.mutate(deleteUser.id); setDeleteUser(null); } }}
-        onCancel={() => setDeleteUser(null)}
+        onOpenChange={(o) => { if (!o) setDeleteUser(null); }}
       />
 
       {/* Transfer default admin confirm */}
@@ -370,7 +370,7 @@ function UsersPage() {
         confirmLabel="Transfer"
         variant="default"
         onConfirm={() => { if (transferTarget) makeDefaultMut.mutate(transferTarget.id); }}
-        onCancel={() => setTransferTarget(null)}
+        onOpenChange={(o) => { if (!o) setTransferTarget(null); }}
       />
     </div>
   );
