@@ -4,14 +4,11 @@ import { useState, useEffect } from "react";
 import { MapPin, Award, Building2, Star, CheckCircle2, Home, Phone, BookOpen, ArrowLeft, Loader2 } from "lucide-react";
 import { FreeAdmissionForm } from "@/components/FreeAdmissionForm";
 import { collegeService } from "@/services/collegeService";
-import campusImg1 from "@/assets/college-1.jpg";
-import campusImg2 from "@/assets/college-2.jpg";
 import campusImg3 from "@/assets/college-3.jpg";
-import campusImg4 from "@/assets/college-4.jpg";
 import heroStudents from "@/assets/hero-students.jpg";
 
 // Education / graduation themed images (local assets)
-const CAMPUS_SLIDES = [campusImg1, campusImg2, campusImg3, campusImg4, heroStudents];
+const CAMPUS_SLIDES = [heroStudents, campusImg3, heroStudents, campusImg3, heroStudents];
 
 function HeroSlideshow({ collegeId }: { collegeId: string }) {
   // Each college gets a deterministic starting slide so they look different
