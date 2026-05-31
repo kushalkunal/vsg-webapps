@@ -8,6 +8,7 @@ export interface AppUser {
   tenantId: string;
   isActive: boolean;
   createdAt: string;
+  isDefault: boolean;
 }
 
 export interface CreateUserPayload {
@@ -38,6 +39,10 @@ export const userService = {
 
   async disable(id: string): Promise<void> {
     await api.patch(`/admin/users/${id}/disable`);
+  },
+
+  async makeDefault(id: string): Promise<void> {
+    await api.patch(`/admin/users/${id}/make-default`);
   },
 
   async resetPassword(id: string, password: string): Promise<void> {

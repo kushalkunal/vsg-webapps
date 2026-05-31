@@ -64,11 +64,15 @@ function FeeBreakdownTable({ fees }: { fees: FeeSummary[] }) {
           <TableHead className="text-right">Pkg w/o Hostel</TableHead>
           <TableHead className="text-right">Pkg w/ Hostel</TableHead>
           <TableHead className="text-right">Misc</TableHead>
-          <TableHead className="text-right font-bold">Total</TableHead>
+          <TableHead className="text-right font-bold">Total w/o Hostel</TableHead>
+          <TableHead className="text-right font-bold">Total w/ Hostel</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {fees.map((f) => (
+        {fees.map((f) => {
+          const base = (f.registrationFee || 0) + (f.tuitionFee || 0) + (f.examinationFee || 0) + (f.miscellaneousFee || 0);
+          const withHostel = base + (f.hostelFee || 0);
+          return (
           <TableRow key={f.id}>
             <TableCell>
               <div className="flex flex-col">
@@ -85,11 +89,15 @@ function FeeBreakdownTable({ fees }: { fees: FeeSummary[] }) {
             <TableCell className="text-right">{fmt(f.totalPkgWithoutHostel, f.currency)}</TableCell>
             <TableCell className="text-right">{fmt(f.totalPkgWithHostel, f.currency)}</TableCell>
             <TableCell className="text-right">{fmt(f.miscellaneousFee, f.currency)}</TableCell>
+            <TableCell className="text-right font-bold">
+              {fmt(base, f.currency)}
+            </TableCell>
             <TableCell className="text-right font-bold text-primary">
-              {fmt(f.totalFee, f.currency)}
+              {fmt(withHostel, f.currency)}
             </TableCell>
           </TableRow>
-        ))}
+          );
+        })}
       </TableBody>
     </Table>
   );

@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2, PowerOff, Power, Loader2, KeyRound } from "lucide-react";
+import { Plus, Trash2, PowerOff, Power, Loader2, KeyRound, Crown, ShieldCheck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userService, type AppUser } from "@/services/userService";
+import { useAuthStore } from "@/stores/authStore";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,14 +48,21 @@ type ResetPwForm = z.infer<typeof resetPwSchema>;
 
 function UsersPage() {
   const qc = useQueryClient();
-  const [open, setOpen]             = useState(false);
-  const [deleteUser, setDeleteUser]   = useState<AppUser | null>(null);
-  const [resetUser, setResetUser]     = useState<AppUser | null>(null);
+  const authUser = useAuthStore(s => s.user);
+
+  const [open, setOpen]                         = useState(false);
+  const [deleteUser, setDeleteUser]             = useState<AppUser | null>(null);
+  const [resetUser, setResetUser]               = useState<AppUser | null>(null);
+  const [transferTarget, setTransferTarget]     = useState<AppUser | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn:  userService.list,
   });
+
+  // Identify the currently logged-in user's record and whether they are default admin
+  const me              = users.find(u => u.id === authUser?.id);
+  const amIDefaultAdmin = me?.isDefault === true;
 
   const createMut = useMutation({
     mutationFn: (vals: CreateForm) =>
@@ -64,6 +72,8 @@ function UsersPage() {
       setOpen(false);
       toast.success("User created successfully.");
     },
+    onError: (e: { response?: { data?: { message?: string } } }) =>
+      toast.error(e?.response?.data?.message ?? "Failed to create user."),
   });
 
   const deleteMut = useMutation({
@@ -72,12 +82,27 @@ function UsersPage() {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       toast.success("User deleted.");
     },
+    onError: (e: { response?: { data?: { message?: string } } }) =>
+      toast.error(e?.response?.data?.message ?? "Failed to delete user."),
   });
 
   const toggleMut = useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       active ? userService.enable(id) : userService.disable(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
+    onError: (e: { response?: { data?: { message?: string } } }) =>
+      toast.error(e?.response?.data?.message ?? "Failed to update user."),
+  });
+
+  const makeDefaultMut = useMutation({
+    mutationFn: (id: string) => userService.makeDefault(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      setTransferTarget(null);
+      toast.success("Default admin transferred successfully.");
+    },
+    onError: (e: { response?: { data?: { message?: string } } }) =>
+      toast.error(e?.response?.data?.message ?? "Failed to transfer default admin."),
   });
 
   const resetPwMut = useMutation({
@@ -97,6 +122,22 @@ function UsersPage() {
   const resetPwForm = useForm<ResetPwForm>({ resolver: zodResolver(resetPwSchema) });
 
   const onSubmit = (vals: CreateForm) => createMut.mutate(vals);
+
+  // Determine which actions are available for a given user row
+  function canToggle(u: AppUser) {
+    if (u.id === authUser?.id) return false;          // can't act on yourself
+    if (u.roles[0] === "ADMIN") return amIDefaultAdmin; // only default admin can act on other admins
+    return true;                                        // any admin can act on counselors
+  }
+  function canDelete(u: AppUser) {
+    if (u.id === authUser?.id) return false;
+    if (u.isDefault) return false;                    // must transfer first
+    if (u.roles[0] === "ADMIN") return amIDefaultAdmin;
+    return true;
+  }
+  function canMakeDefault(u: AppUser) {
+    return amIDefaultAdmin && u.roles[0] === "ADMIN" && !u.isDefault && u.isActive;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -130,12 +171,27 @@ function UsersPage() {
             <tbody className="divide-y divide-border">
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium">{u.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      {u.name}
+                      {u.id === authUser?.id && (
+                        <span className="text-xs text-muted-foreground">(you)</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={u.roles[0] === "ADMIN" ? "default" : "secondary"}>
-                      {u.roles[0]}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={u.roles[0] === "ADMIN" ? "default" : "secondary"}>
+                        {u.roles[0]}
+                      </Badge>
+                      {u.isDefault && (
+                        <Badge variant="outline" className="gap-1 border-amber-400 text-amber-600 dark:text-amber-400">
+                          <Crown className="h-3 w-3" />
+                          Default
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={u.isActive ? "outline" : "destructive"}>
@@ -143,7 +199,8 @@ function UsersPage() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      {/* Reset password â€” any admin can do this for anyone */}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -152,23 +209,40 @@ function UsersPage() {
                       >
                         <KeyRound className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      {u.roles[0] !== "ADMIN" && (
+
+                      {/* Make Default Admin â€” only default admin, only on other active admins */}
+                      {canMakeDefault(u) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setTransferTarget(u)}
+                          title="Make Default Admin"
+                        >
+                          <ShieldCheck className="h-4 w-4 text-amber-500" />
+                        </Button>
+                      )}
+
+                      {/* Enable / Disable */}
+                      {canToggle(u) && (
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => toggleMut.mutate({ id: u.id, active: !u.isActive })}
-                          title={u.isActive ? "Disable" : "Enable"}
+                          title={u.isActive ? "Deactivate" : "Activate"}
                         >
                           {u.isActive
                             ? <PowerOff className="h-4 w-4 text-muted-foreground" />
                             : <Power className="h-4 w-4 text-green-600" />}
                         </Button>
                       )}
-                      {u.roles[0] !== "ADMIN" && (
+
+                      {/* Delete */}
+                      {canDelete(u) && (
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => setDeleteUser(u)}
+                          title="Delete User"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -240,24 +314,18 @@ function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm */}
-      <ConfirmDialog
-        open={!!deleteUser}
-        title="Delete User"
-        description={`Are you sure you want to delete "${deleteUser?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        variant="destructive"
-        onConfirm={() => { if (deleteUser) { deleteMut.mutate(deleteUser.id); setDeleteUser(null); } }}
-        onCancel={() => setDeleteUser(null)}
-      />
-
       {/* Reset password dialog */}
-      <Dialog open={!!resetUser} onOpenChange={(o) => { if (!o) { setResetUser(null); resetPwForm.reset(); } }}>
+      <Dialog open={!!resetUser} onOpenChange={(o) => { if (!o) setResetUser(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset Password — {resetUser?.name}</DialogTitle>
+            <DialogTitle>Reset Password â€” {resetUser?.name}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={resetPwForm.handleSubmit((vals) => resetPwMut.mutate({ id: resetUser!.id, password: vals.password }))} className="space-y-4 pt-2">
+          <form
+            onSubmit={resetPwForm.handleSubmit((vals) =>
+              resetUser && resetPwMut.mutate({ id: resetUser.id, password: vals.password })
+            )}
+            className="space-y-4 pt-2"
+          >
             <div className="space-y-1.5">
               <Label>New Password</Label>
               <Input type="password" placeholder="Min 8 characters" {...resetPwForm.register("password")} />
@@ -273,7 +341,7 @@ function UsersPage() {
               )}
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setResetUser(null); resetPwForm.reset(); }}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setResetUser(null)}>Cancel</Button>
               <Button type="submit" disabled={resetPwMut.isPending}>
                 {resetPwMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Reset Password
@@ -282,6 +350,28 @@ function UsersPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirm */}
+      <ConfirmDialog
+        open={!!deleteUser}
+        title="Delete User"
+        description={`Are you sure you want to delete "${deleteUser?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => { if (deleteUser) { deleteMut.mutate(deleteUser.id); setDeleteUser(null); } }}
+        onCancel={() => setDeleteUser(null)}
+      />
+
+      {/* Transfer default admin confirm */}
+      <ConfirmDialog
+        open={!!transferTarget}
+        title="Transfer Default Admin"
+        description={`Make "${transferTarget?.name}" the new default admin? You will lose the ability to manage other admins.`}
+        confirmLabel="Transfer"
+        variant="default"
+        onConfirm={() => { if (transferTarget) makeDefaultMut.mutate(transferTarget.id); }}
+        onCancel={() => setTransferTarget(null)}
+      />
     </div>
   );
 }
